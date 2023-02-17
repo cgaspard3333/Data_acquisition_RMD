@@ -4,7 +4,8 @@ import struct
 import sys
 import random
 
-ser = serial.Serial('/dev/ttyACM0',921600)  # open serial port 921600,8,N,1
+# ser = serial.Serial('/dev/ttyACM0', 576000)  # open serial port 921600,8,N,1
+ser = serial.Serial('/dev/ttyACM0', 921600)
 
 print(ser.name)         # check which port was really used
 
@@ -27,7 +28,7 @@ test = input()
 ser.write(b'exp\r')     # write a string
 print(ser.read(2)) # eliminate first '\r\n'
 
-for i in range (0,20001):
+for i in range (0,30001):
     # if i % 1000 == 0:
     #     currentvalue = round(random.uniform(-0.1,0.1),1)
     #     torque_head = "torque_cmd 1 "
@@ -38,14 +39,16 @@ for i in range (0,20001):
     if header == b'\xff':
         header2 = ser.read(1)
         if header2 == b'\xaa':
-            data = ser.read(10)
-            delta_t, current, pos = struct.unpack('<Ihi',data)
-            # print(delta_t, current, pos)
-            f.write(str(delta_t))
+            data = ser.read(11)
+            ts, current, pos, cmd_curr = struct.unpack('<Ihib',data)
+            # print(ts, current, pos)
+            f.write(str(ts))
             f.write(",")
             f.write(str(current))
             f.write(",")
             f.write(str(pos))
+            f.write(",")
+            f.write(str(cmd_curr))
             f.write("\n")
         
     # print(data)
