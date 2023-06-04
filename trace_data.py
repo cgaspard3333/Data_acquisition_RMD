@@ -30,7 +30,10 @@ for file in os.listdir():
     if file.endswith(".txt"):
         file_path = f"{file}"
   
-        f = open(file_path,"r")
+        fr = open(file_path,"r")
+
+        file_name_write="resampled_"+file
+        fw = open(file_name_write, "x")
 
         count = 0
         ts=np.array([])
@@ -41,23 +44,23 @@ for file in os.listdir():
         A_part2 = np.array([[0, 0],
                             [0, 0]]) 
         B = np.array([]) 
-        
+
         while True:
             count += 1
-            line = f.readline()
+            line = fr.readline()
 
             if not line:
                 break
-            str = line.replace('\n', ',')
-            new_str = str.split(',')
+            data = line.replace('\n', ',')
+            new_data = data.split(',')
 
-            ts = np.append(ts,int(new_str[0])/1e6)
-            torque = np.append(torque,int(new_str[1]) * 33/2048)
-            pos = np.append(pos,(int(new_str[2])-52706) * 2*math.pi/65535/6)
-            torque_cmd = np.append(torque_cmd,int(new_str[3]) * 32/2000)
+            ts = np.append(ts,int(new_data[0])/1e6)
+            torque = np.append(torque,int(new_data[1]) * 33/2048)
+            pos = np.append(pos,(int(new_data[2])-52706) * 2*math.pi/65535/6)
+            torque_cmd = np.append(torque_cmd,int(new_data[3]) * 32/2000)
 
-        size_sliding_windows = 0.05 #s =10ms
-        sample_rate = 0.003 #s =10ms
+        size_sliding_windows = 0.04 #s =40ms
+        sample_rate = 0.002 #s =500Hz
 
         resampled_ts=np.array([])
         speed=np.array([])
@@ -81,6 +84,17 @@ for file in os.listdir():
             torque_lstsq = np.append(torque_lstsq, torque_a*i+torque_b)
             pos_lstsq = np.append(pos_lstsq, pos_a*i+pos_b)
             torque_cmd_lstsq = np.append(torque_cmd_lstsq, torque_cmd_a*i+torque_cmd_b)
+            
+            fw.write(str(round(i,10)))
+            fw.write(",")
+            fw.write(str(round(torque_a*i+torque_b,10)))
+            fw.write(",")
+            fw.write(str(round(pos_a*i+pos_b,10)))
+            fw.write(",")
+            fw.write(str(round(torque_cmd_a*i+torque_cmd_b,10)))
+            fw.write(",")
+            fw.write(str(round(pos_a,10)))
+            fw.write("\n")
 
         resampled_ts = resampled_ts[:-1]
         torque_lstsq = torque_lstsq[:-1]
@@ -119,7 +133,7 @@ for step in range(len(speed)):
 states = np.array(states)
 
 print(coeffs)
-print("Alpha :", coeffs[0], "| Beta :", coeffs[1], "| l:", 1/coeffs[1])
+print("Alpha :", coeffs[0], "| Beta :", coeffs[1], "| Gamma :", coeffs[2], "| l:", 1/coeffs[1])
 
 fig, axs = plt.subplots(5, sharex=True)
 
